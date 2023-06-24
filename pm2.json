@@ -1,0 +1,19 @@
+{
+    "apps": [
+        {
+            "name": "web",
+            "exec_mode": "cluster",
+            "instances": "max",
+            "script": "./dist/app.js",
+            "interpreter": "node",
+            "env": {
+            "SECRET_KEY": "ik+-d8a3e*nio47=%n@#pbe-pr9x!5ths269g4++##3v-*oejb",
+			"PORT":"8081",
+			"INSTANCE_CONNECTION_NAME": "ez-marketing-bck:us-south1:alberto-turcios",
+			"AWS_ACCESS_KEY_ID": "AKIA4VVEZUVU5PTBE6X5",
+			"AWS_SECRET_ACCESS_KEY": "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"
+            }
+        }
+    ]
+}
+
