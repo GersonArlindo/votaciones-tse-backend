@@ -38,6 +38,7 @@ export const Login = async (req: Request, res: Response) => {
 
     } catch (error) {
         return res.status(500).json({
+            error: error,
             msg: "Something went wrong: Wrong username or password"
         });
     }

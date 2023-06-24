@@ -41,16 +41,12 @@ export const uploadElements = async (req: Request, res: Response) => {
     try {
         const { ruta_image }: any = req.files
         const { type_img, appointment_id } = req.body
-
         let nameUnic = "";
-        let carpeta = Tipo_carpeta(type_img[0])
-
         if (ruta_image) {
             const foto = ruta_image;
-
+            const filePath = path.join(__dirname, './../../public/images', `${foto.name}`)
             const extencion = foto.name.split('.').pop();
             nameUnic = uuidv4() + "." + extencion;
-
             if (extencion == "pdf") {
                 return res.status(400).json({ msg: "Please upload a valid image!" });
             }
@@ -63,28 +59,26 @@ export const uploadElements = async (req: Request, res: Response) => {
             if (extencion == "jfif"){
                 return res.status(400).json({ msg: "Please upload a valid image!" });
             }
-
-            const result = await uploadFile(foto.tempFilePath, `${carpeta}/`, nameUnic, `${foto.mimetype}`);  // Calling above function in s3.js
-                    
-            await unlinkFile(foto.tempFilePath);
-
-            const data =
-            {
-                type_img: type_img,
-                appointment_id: appointment_id,
-                ruta_image: nameUnic
-            }
-
-            await UploadImage.create(data);
-
+            foto.mv(filePath, async (err: any) => {
+                if (err) {
+                    return res.status(500).send(err)
+                }else{
+                    const urlactual = `${foto.name}`;
+                    const data =
+                    {
+                        type_img: type_img,
+                        appointment_id: appointment_id,
+                        ruta_image: urlactual
+                    }
+                    await UploadImage.create(data);
+                }
+            })
         } else {
-
             for (let i = 0; i < ruta_image.length; i++) {
-
                 const foto = ruta_image[i];
+                const filePath = path.join(__dirname, './../../public/images', `${foto.name}`)
                 const extencion = foto.name.split('.').pop();
                 nameUnic = uuidv4() + "." + extencion;
-
                 if (extencion == "pdf") {
                     return res.status(400).json({ msg: "Please upload a valid image!" });
                 }
@@ -97,31 +91,31 @@ export const uploadElements = async (req: Request, res: Response) => {
                 if (extencion == "jfif"){
                     return res.status(400).json({ msg: "Please upload a valid image!" });
                 }
-
-                const result = await uploadFile(foto.tempFilePath, `${carpeta}/`, nameUnic, `${foto.mimetype}`);  // Calling above function in s3.js
-                    
-                await unlinkFile(foto.tempFilePath);
-
-                const data =
-                {
-                    type_img: type_img,
-                    appointment_id: appointment_id,
-                    ruta_image: nameUnic
-                }
-                
-                await UploadImage.create(data);
+                foto.mv(filePath, async (err: any) => {
+                    if (err) {
+                        return res.status(500).send(err)
+                    }else{
+                        const urlactual = `${foto.name}`;
+    
+                        const data =
+                        {
+                            type_img: type_img,
+                            appointment_id: appointment_id,
+                            ruta_image: urlactual
+                        }
+                        
+                        await UploadImage.create(data);                    
+                    }
+                })
             }
         }
-
-        res.json({
+        return res.json({
             msg: "Resources created"
         })
-
     } catch (error) {
-        res.status(500).json({
+        return res.status(500).json({
             msg: 'error' + error
         })
-
     }
 }
 

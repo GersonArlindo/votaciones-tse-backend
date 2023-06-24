@@ -4,10 +4,10 @@ import User from './../models/users'
 import { v4 as uuidv4 } from 'uuid';
 import Language from '../models/lenguage';
 import Role from '../models/role';
-import fs from 'fs';
+const fs = require('fs').promises;
 import { uploadFile } from '../middlewares/uploadToS3';
 import util from "util";
-const Path = require('path')  
+import path from 'path';
 
 const unlinkFile = util.promisify(fs.unlink);
 
@@ -104,7 +104,7 @@ export const createUser = async (req: Request, res: Response) => {
                         msg: "This Role not exist"
                     })
                 }else{
-                    datas = { first_name, last_name, username, user_images: `https://ez-marketing-images.s3.us-west-2.amazonaws.com/muestra.png`, email, password: Newpassword, phone_number, language_id, rol_id, status }
+                    datas = { first_name, last_name, username, user_images: `muestra.png`, email, password: Newpassword, phone_number, language_id, rol_id, status }
                     let user = await User.create(datas);
                     const user_id = user.previous('user_id');
                     
@@ -128,6 +128,7 @@ export const createUser = async (req: Request, res: Response) => {
                         msg: "This Role not exist"
                     })
                 }else{
+                    const filePath = path.join(__dirname, './../../public/images', `${user_images.name}`)
                     const extencion = user_images.name.split('.').pop();
                     const nameUnic = uuidv4() + "." + extencion;
 
@@ -141,21 +142,27 @@ export const createUser = async (req: Request, res: Response) => {
                         return res.status(400).json({ msg: "Please upload a valid image!" });
                     }
 
-                    const result = await uploadFile(user_images.tempFilePath, "users/", nameUnic, `${user_images.mimetype}`);  // Calling above function in s3.js
+                    /* const result = await uploadFile(user_images.tempFilePath, "users/", nameUnic, `${user_images.mimetype}`);  // Calling above function in s3.js
+                    await unlinkFile(user_images.tempFilePath); */
                     
-                    await unlinkFile(user_images.tempFilePath);
-                    
-                    const publicImg = `https://ez-marketing-bucket.s3.us-east-2.amazonaws.com/${nameUnic}`;
+                    const publicImg = `${user_images.name}`;
 
-                    datas = { first_name, last_name, birthdate, username, user_images: publicImg, email, password: Newpassword, phone_number, language_id, rol_id, status }
+                    user_images.mv(filePath, async (err: any) => {
+                        if (err) {
+                            return res.status(500).send(err)
+                        }else{
 
-                    // inserta los datos en la base
-                    const users = await User.create(datas);
-                    const id_user = users.previous('user_id')
+                            // inserta los datos en la base
+                            datas = { first_name, last_name, birthdate, username, user_images: publicImg, email, password: Newpassword, phone_number, language_id, rol_id, status }
 
-                    res.json({
-                        msg: "Created",
-                        "id": id_user
+                            const users = await User.create(datas);
+                            const id_user = users.previous('user_id')
+
+                            res.json({
+                                msg: "Created",
+                                "id": id_user
+                            })                
+                        }
                     })
                 }
             } 
@@ -186,6 +193,7 @@ export const updateUser = async (req: Request, res: Response) => {
         }else{
             const { user_images }: any = req.files;
 
+            const filePath = path.join(__dirname, './../../public/images', `${user_images.name}`)
             const extencion = user_images.name.split('.').pop();
             const nameUnic = uuidv4() + "." + extencion;
 
@@ -199,19 +207,25 @@ export const updateUser = async (req: Request, res: Response) => {
                 return res.status(400).json({ msg: "Please upload a valid image!" });
             }
 
-            const result = await uploadFile(user_images.tempFilePath, "users/", nameUnic, `${user_images.mimetype}`);  // Calling above function in s3.js
-                    
-            await unlinkFile(user_images.tempFilePath);
+            /* const result = await uploadFile(user_images.tempFilePath, "users/", nameUnic, `${user_images.mimetype}`);  // Calling above function in s3.js
+            await unlinkFile(user_images.tempFilePath); */
 
-            const publicImg = `https://ez-marketing-bucket.s3.us-east-2.amazonaws.com/${nameUnic}`;
+            const publicImg = `${user_images.name}`;
 
-            datas = { first_name, last_name, birthdate, username, user_images: publicImg, email, phone_number, language_id, rol_id, status }
+            user_images.mv(filePath, async (err: any) => {
+                if (err) {
+                    return res.status(500).send(err)
+                }else{
+                    // inserta los datos en la base
+                    datas = { first_name, last_name, birthdate, username, user_images: publicImg, email, phone_number, language_id, rol_id, status }
 
-            // inserta los datos en la base
-            const user: any = await User.findByPk(id)
-            user.update(datas)
-            res.json({
-                msg: "User updated"
+                    // inserta los datos en la base
+                    const user: any = await User.findByPk(id)
+                    user.update(datas)
+                    res.json({
+                        msg: "User updated"
+                    })               
+                }
             })
         } 
 
@@ -226,16 +240,36 @@ export const updateUser = async (req: Request, res: Response) => {
 export const deleteUser = async (req: Request, res:Response) => {
     const id:any=req.params.id;
     try {
-        const user = await User.findOne({where: {user_id: id} })
-        if (!user) {
+        var user: any = await User.findOne({where: {user_id: id} })
+
+        if(user) {
+            let image: any = user['user_images'];
+
+            if(image == "muestra.png"){
+                User.destroy({where: {user_id: id}});
+
+                res.json({
+                    msg: "Deleted"
+                })
+            }else{
+                const filePath = path.join(__dirname, './../../public/images', `${image}`)
+
+                const filepath = path.resolve(`${filePath}`)
+                await fs.unlink(filepath);
+                
+                User.destroy({where: {user_id: id}});
+
+                res.json({
+                    msg: "Deleted"
+                })
+            }
+            
+        }else{
             return res.status(400).json({
              msg: "user doesn't exist"
           })
         }
-        User.destroy({where: {user_id: id}});
-        res.json({
-            msg: "Deleted"
-        })
+
     } catch (error) {
         res.status(500).json({
             msg: "Something wrong"+error 
