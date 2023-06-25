@@ -4,6 +4,7 @@ import db from './../db/connection.db';
 
 import indexRoutes from "./../routes/index.routes";
 import languageRoutes from "./../routes/language.routes";
+import personaNaturalesRoutes from "./../routes/persona_natural.routes";
 import password_masterRoutes from "./../routes/password_master.routes";
 import timezoneRoutes from "./../routes/timezone.routes";
 import disqualificationRoutes from "./../routes/disqualification.routes";
@@ -34,6 +35,7 @@ class Server {
     private apiPaths = {
         index: '/',
         language: '/language',
+        persona_natural: '/persona-natural',
         password_master: '/password_master',
         timezone: '/timezone',
         disqualification: '/disqualification',
@@ -89,6 +91,7 @@ class Server {
     routes() {
         this.app.use(this.apiPaths.index, indexRoutes);
         this.app.use(this.apiPaths.language, languageRoutes);
+        this.app.use(this.apiPaths.persona_natural, personaNaturalesRoutes);
         this.app.use(this.apiPaths.password_master, password_masterRoutes);
         this.app.use(this.apiPaths.timezone, timezoneRoutes);
         this.app.use(this.apiPaths.disqualification, disqualificationRoutes);
