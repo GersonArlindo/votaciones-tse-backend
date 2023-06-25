@@ -14,6 +14,7 @@ import appointment_outcomeRoutes from "./../routes/appointment_outcome.routes";
 import modulesRoutes from "./../routes/modules.routes";
 import permissionRoutes from "./../routes/permission.routes";
 import userRoutes from "./../routes/user.routes";
+import partidosPoliticosRoutes from "./../routes/partidos_politicos.routes";
 import providerRoutes from "./../routes/provider.routes";
 import installersRoutes from "./../routes/installer.routes";
 import stateRoutes from "./../routes/state.routes";
@@ -43,6 +44,7 @@ class Server {
         modules: '/module',
         permission: '/permission',
         user: '/user',
+        partidosPoliticos: '/partidos_politicos',
         provider: '/provider',
         installers: '/installers',
         state: '/state',
@@ -97,6 +99,7 @@ class Server {
         this.app.use(this.apiPaths.modules, modulesRoutes);
         this.app.use(this.apiPaths.permission, permissionRoutes);
         this.app.use(this.apiPaths.user, userRoutes);
+        this.app.use(this.apiPaths.partidosPoliticos, partidosPoliticosRoutes);
         this.app.use(this.apiPaths.provider, providerRoutes);
         this.app.use(this.apiPaths.installers, installersRoutes);
         this.app.use(this.apiPaths.state, stateRoutes);
