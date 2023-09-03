@@ -1,7 +1,7 @@
 import { check } from "express-validator";
 import { validarJWT } from "../middlewares/validarJWT";
 import { Validar_errores } from "../middlewares/validarCampos";
-import { Change_password, Login } from "../controllers/auth.controller";
+import { Change_password, Login, LoginPersonaNatural } from "../controllers/auth.controller";
 import { Router } from "express";
 
 const router = Router();
@@ -13,6 +13,14 @@ router.post('/login',
         Validar_errores
     ],
     Login);
+
+router.post('/login/persona_natural',
+[
+    check('dui_persona', 'Dui is required').not().isEmpty(),
+    Validar_errores
+],
+LoginPersonaNatural);
+
 
 router.put('/update/password', 
     [

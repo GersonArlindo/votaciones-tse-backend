@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import Users from "../models/users";
+import PersonasNaturales from "../models/personas_naturales";
 import bcryp from "bcryptjs";
-import { generarJWT } from "../helpers/generarJWT";
+import { generarJWT, generarJWTPersonNatural } from "../helpers/generarJWT";
 require('dotenv').config;
 
 const salt = bcryp.genSaltSync();
@@ -26,6 +27,40 @@ export const Login = async (req: Request, res: Response) => {
         else if (!validpassword) {
             res.status(400).json({
                 msg: "Password incorrecto"
+            })
+        }
+        else {
+
+            res.status(200).json({
+                token
+            })
+        }
+
+
+    } catch (error) {
+        return res.status(500).json({
+            error: error,
+            msg: "Something went wrong: Wrong username or password"
+        });
+    }
+
+
+}//message
+
+export const LoginPersonaNatural = async (req: Request, res: Response) => {
+
+    // res.render('login/index');
+    const { dui_persona } = req.body;
+    try {
+
+        // verificamos si existe el usuarios+
+        const usuario: any = await PersonasNaturales.findOne({ where: { dui_persona: dui_persona } });
+        console.log(usuario)
+        const token = await generarJWTPersonNatural(usuario.dui_persona, usuario.nombre_persona, usuario.apellidos_persona, usuario.genero, usuario.departamento, usuario.municipio, usuario.direccion_persona, usuario.fecha_nacimiento);
+
+        if (!usuario) {
+            res.status(400).json({
+                msg: "DUI NO ENCONTRADO"
             })
         }
         else {
